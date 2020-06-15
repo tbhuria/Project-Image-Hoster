@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -92,13 +93,33 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model, HttpSession session,
+                            final RedirectAttributes redirectAttributes) {
         Image image = imageService.getImage(imageId);
 
         String tags = convertTagsToString(image.getTags());
+        Boolean isLoggedUSer = userSameAsLoggedInUser(image.getUser(), session);
+        String error = "Only the owner of the image can edit the image";
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
-        return "images/edit";
+
+        if (!isLoggedUSer) {
+            redirectAttributes.addAttribute("editError", error);
+            model.addAttribute("editError", error);
+            redirectAttributes.addFlashAttribute("editError", error);
+            return "redirect:/images/" + image.getId() + "/" + image.getTitle();
+        } else {
+            return "images/edit";
+        }
+    }
+    // This method check whether Logged-in User and given user are same or not
+    private Boolean userSameAsLoggedInUser(User user, HttpSession session) {
+        User loggedInuser = (User) session.getAttribute("loggeduser");
+        if (user.getId() == loggedInuser.getId()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //This controller method is called when the request pattern is of type 'images/edit' and also the incoming request is of PUT type
@@ -114,7 +135,6 @@ public class ImageController {
     //The method converts the string to a list of all the tags using findOrCreateTags() method and sets the tags attribute of an image as a list of all the tags
     @RequestMapping(value = "/editImage", method = RequestMethod.PUT)
     public String editImageSubmit(@RequestParam("file") MultipartFile file, @RequestParam("imageId") Integer imageId, @RequestParam("tags") String tags, Image updatedImage, HttpSession session) throws IOException {
-
         Image image = imageService.getImage(imageId);
         String updatedImageData = convertUploadedFileToBase64(file);
         List<Tag> imageTags = findOrCreateTags(tags);
@@ -140,11 +160,27 @@ public class ImageController {
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
-        imageService.deleteImage(imageId);
-        return "redirect:/images";
-    }
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId, Model model, HttpSession session,
+                                    final RedirectAttributes redirectAttributes) {
+        Image image = imageService.getImage(imageId);
+        Boolean isLoggedUSer = userSameAsLoggedInUser(image.getUser(), session);
 
+        String tags = convertTagsToString(image.getTags());
+        String error = "Only the owner of the image can delete the image";
+        model.addAttribute("image", image);
+        model.addAttribute("tags", tags);
+
+        if (!isLoggedUSer) {
+            redirectAttributes.addAttribute("deleteError", error);
+            model.addAttribute("deleteError", error);
+            redirectAttributes.addFlashAttribute("deleteError", error);
+            return "redirect:/images/" + image.getId() + "/" + image.getTitle();
+        } else {
+            imageService.deleteImage(imageId);
+            return "redirect:/images";
+        }
+
+    }
 
     //This method converts the image to Base64 format
     private String convertUploadedFileToBase64(MultipartFile file) throws IOException {
