@@ -43,23 +43,24 @@ public class UserController {
     @RequestMapping(value = "users/registration", method = RequestMethod.POST)
     public String registerUser(User user, Model model, final RedirectAttributes redirectAttributes) {
         String password = user.getPassword();
-        String[] partialRegexChecks = { ".*[a-zA-Z]+.*", // Character
+        String[] partialRegexChecks = {".*[a-zA-Z]+.*", // Character
                 ".*[0-9]+.*", // digits
                 ".*[!@#$%^&*(),.?:{}|<>]+.*"// symbols
         };
 
-        Boolean isValid = (password.matches(partialRegexChecks[0]) &&  (password.matches(partialRegexChecks[1]) && password.matches(partialRegexChecks[2])));
+        Boolean isValid = (password.matches(partialRegexChecks[0]) && (password.matches(partialRegexChecks[1]) && password.matches(partialRegexChecks[2])));
         String error = "Password must contain atleast 1 alphabet, 1 number & 1 special character";
-        if(isValid) {
+        if (isValid) {
             userService.registerUser(user);
             return "users/login";
-        }else {
+        } else {
             redirectAttributes.addAttribute("passwordTypeError", error);
             model.addAttribute("passwordTypeError", error);
             redirectAttributes.addFlashAttribute("passwordTypeError", error);
             return "redirect:/users/registration";
         }
     }
+
     //This controller method is called when the request pattern is of type 'users/login'
     @RequestMapping("users/login")
     public String login() {
