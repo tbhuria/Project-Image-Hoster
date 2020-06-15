@@ -35,7 +35,7 @@ public class CommentController {
     // '/image/{imageId}/{imageTitle}'
     @RequestMapping(value = "/image/{imageId}/{imageTitle}/comments", method = RequestMethod.POST)
     public String addComment(@RequestParam("comment") String commentText, @PathVariable("imageId") Integer imageId,
-                             @PathVariable("imageTitle") String imageTitle, Model model, HttpSession session){
+                             @PathVariable("imageTitle") String imageTitle, Model model, HttpSession session) {
         Image image = imageService.getImage(imageId);
         String tags = convertTagsToString(image.getTags());
         User loggedInuser = (User) session.getAttribute("loggeduser");
@@ -59,7 +59,7 @@ public class CommentController {
     // Returns the string
     private String convertTagsToString(List<Tag> tags) {
         StringBuilder tagString = new StringBuilder();
-        if( tags.size() > 0) {
+        if (tags.size() > 0) {
             for (int i = 0; i <= tags.size() - 2; i++) {
                 tagString.append(tags.get(i).getName()).append(",");
             }
@@ -67,7 +67,7 @@ public class CommentController {
             Tag lastTag = tags.get(tags.size() - 1);
             tagString.append(lastTag.getName());
             return tagString.toString();
-        }else {
+        } else {
             return "";
         }
 

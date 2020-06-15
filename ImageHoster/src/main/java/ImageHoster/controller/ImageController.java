@@ -119,6 +119,7 @@ public class ImageController {
             return "images/edit";
         }
     }
+
     // This method check whether Logged-in User and given user are same or not
     private Boolean userSameAsLoggedInUser(User user, HttpSession session) {
         User loggedInuser = (User) session.getAttribute("loggeduser");
